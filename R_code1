@@ -1,0 +1,115 @@
+proj <- read.csv("~/workspace-r/proj.csv")
+Y <- data.frame(proj$Yt)[-1,]
+Y <- as.matrix(Y)
+#Y <- matrix(Y)
+View(Y)
+
+options(scipen=999) # get rid of scientific notation
+
+# Create matrix of ones
+one <- rep(1,length=298) # change to 298 if we are taking out the first col
+O <- as.matrix(one)
+
+# Define matrix of data: X
+X <- data.frame(proj$Xt)[-1,]
+X <- as.matrix(X)
+X <- cbind(O,X)
+View(X)
+
+# Define matrix X'X
+XT <- t(X) # transpose X
+XT <- as.matrix(XT) # convert df to matrix
+XTX <- XT%*%X # calculate X'X
+XTX <- as.matrix(XTX) 
+View(XTX)
+
+# Invert matrix X'X
+XTXI <- solve(XTX)
+XTXI <- as.matrix(XTXI) # convert to matrix
+
+# Define matrix X'Y
+XTY <- XT%*%Y
+XTY <- as.matrix(XTY)
+
+# Compute B hat
+B_hat <- (XTXI%*%XTY)
+B_hat
+
+# ANOVA
+n = 298
+k = 2
+
+# Means of X and Y
+X_bar <- sum(proj$Xt, na.rm=TRUE)/n
+X_bar
+Y_bar <- sum(proj$Yt, na.rm=TRUE)/n
+Y_bar
+
+# Define matrixes of Y
+YT <- t(Y)
+YTY <- (YT%*%Y)
+TSS <- YTY
+TSS
+
+# Define to compute ESS RSS
+BT <- t(B_hat)
+BTXTY <- (BT%*%XTY)
+ESS <- BTXTY -(n*Y_bar*Y_bar)
+RSS <- TSS-ESS
+ESS
+RSS
+
+# var-cov
+sigma_hat_square <- RSS/(n-k)
+sigma_hat_square_In <- sigma_hat_square[1.1]
+VAR_B_hat <- sigma_hat_square_In*XTXI
+VAR_B_hat
+
+# Compute, display SE
+SE_alpha_hat <- sqrt(0.000007727216)
+SE_alpha_hat
+SE_beta_hat <- sqrt(0.004094665991)
+SE_beta_hat
+
+R_squared <- ESS/TSS
+R_squared 
+
+#Linear model
+model <- lm(proj$Yt ~ proj$Xt)
+model
+summary(model)
+
+# calculate U
+proj$u_hat <- proj$Y - (0.005051+0.814104*proj$Xt)
+proj$u_hat_sq <- proj$u_hat^2
+
+# get lag values of u_hat, display in a new column
+proj_lag <- transform(proj, u_lag = c(NA, head(u_lag, -1)))
+View(proj_lag)
+
+proj_lag$product <- proj_lag$u_hat * proj_lag$u_lag
+View(proj_lag)
+
+# calculate rho's numerator
+sum_prod <- sum(proj_lag$product[-1])
+sum_prod
+
+# calculate rho's denom
+sum_sqr <- sum(proj_lag$u_hat_sq)
+sum_sqr
+
+rho_hat <- sum_prod/sum_sqr
+rho_hat
+
+d_stat <- 2-2*rho_hat
+d_stat
+
+## question e
+# linear model for ut-sqrd
+white_lm <- lm(proj_lag$u_hat_sq ~ proj_lag$Xt)
+white_lm
+summary(white_lm) # get R^2 value
+
+# Jensen's Test
+t_stat <- 0.005/0.002747
+t_stat
