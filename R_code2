@@ -1,0 +1,42 @@
+portfolio <- read.csv("~/Desktop/STAT/Project/portfolio.csv")
+#options(scipen=999)
+portfolio
+
+model <- lm(portfolio$avg_return ~ portfolio$avg_beta)
+summary(model)
+rss <- sum(residuals(model)^2)
+rss
+plot(portfolio)
+
+# white test
+white <- read.csv("~/Desktop/STAT/Project/white.csv")
+white
+white$u_sq <- white$ut^2
+white
+
+wmodel <- lm(white$u_sq ~ white$x + white$x_sq)
+summary(wmodel)
+
+w_stat <- 5*(summary(wmodel)$r.squared)
+w_stat
+
+# d-w test
+portfolio_lag <- read.csv("~/Desktop/STAT/Project/portfolio_lag.csv")
+portfolio_lag 
+
+#calculate ut*ut-1
+portfolio_lag$prod <- portfolio_lag$ut*portfolio_lag$ut_lag
+#calculate ut-1 ^ 2
+portfolio_lag$sq <- portfolio_lag$ut^2
+
+portfolio_lag
+
+numer <- sum(portfolio_lag$prod[-1])
+numer
+deno <- sum(portfolio_lag$sq)
+deno
+
+rho <- numer/deno
+rho
+dstat <- 2-2*rho
+dstat
